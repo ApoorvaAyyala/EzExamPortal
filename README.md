@@ -1,1 +1,1 @@
-# Ez-Exam-Exam-Portal-
+# EzExamPortal
