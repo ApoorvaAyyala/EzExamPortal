@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-R-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZ Exam Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for notification modal */
+        #notification-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #notification-list::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 3px;
+        }
+        #notification-list::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+        .animate-pulse {
+             animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <svg class="h-8 w-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747H9m6 0h-3v5.747h3m0-11.494V6.253m0 5.747h3v5.747h-3M3 6.253h3v11.494H3V6.253z"/>
+                    </svg>
+                    <span class="font-bold text-xl ml-2 text-gray-800">EZ Exam Portal</span>
+                </div>
+                <!-- Right Side -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600">
+                        <span id="current-role-display">Role: None</span>
+                    </div>
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button onclick="toggleNotificationModal()" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+                            <svg id="notification-bell" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </button>
+                        <span id="notification-count" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                            0
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="hidden fixed top-16 right-4 sm:right-6 lg:right-8 w-full max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-medium text-gray-900">Notifications</h3>
+            <button onclick="toggleNotificationModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <ul id="notification-list" class="max-h-96 overflow-y-auto">
+            <li class="p-4 text-gray-500">Loading notifications...</li>
+        </ul>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Loading Indicator (hidden by default) -->
+        <div id="loading-indicator" class="hidden text-center py-16">
+            <p class="mt-4 text-gray-600">Loading...</p>
+        </div>
+
+        <!-- View: Auth / Role Selector -->
+        <div id="view-auth" class="hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg mx-auto text-center">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Your Role</h2>
+                <p class="text-gray-600 mb-8">This is a local demo. Data will be saved in your browser's localStorage.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="selectRole('student')" class="p-6 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                        <span class="text-4xl">🎓</span>
+                        <span class="block text-xl font-semibold mt-2">Student</span>
+                    </button>
+                    <button onclick="selectRole('admin')" class="p-6 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition duration-200">
+                        <span class="text-4xl">⚙️</span>
+                        <span class="block text-xl font-semibold mt-2">Admin</span>
+                    </button>
+                    <button onclick="selectRole('evaluator')" class="p-6 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition duration-200">
+                        <span class="text-4xl">🧑‍🏫</span>
+                        <span class="block text-xl font-semibold mt-2">Evaluator</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Role Select Button (for dashboards) -->
+        <button onclick="goBackToRoleSelect()" class="fixed bottom-4 left-4 px-4 py-2 bg-gray-700 text-white rounded-lg shadow-lg hover:bg-gray-800 z-30">
+            Change Role
+        </button>
+
+        <!-- View: Admin Dashboard -->
+        <div id="view-dashboard-admin" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Column 1: Create Exam -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Create New Exam</h3>
+                        <form id="create-exam-form">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="examTitle" class="block text-sm font-medium text-gray-700">Exam Title</label>
+                                    <input type="text" id="examTitle" name="examTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label for="examDuration" class="block text-sm font-medium text-gray-700">Duration (in minutes)</label>
+                                    <input type="number" id="examDuration" name="examDuration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required min="1">
+                                </div>
+                            </div>
+                            <div id="questions-container" class="mt-6">
+                                <!-- Questions will be added here -->
+                            </div>
+                            <div class="flex justify-between items-center mt-6">
+                                <button type="button" onclick="addQuestionField()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Add Question</button>
+                                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">Create Exam</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Column 1.2: Send Notification -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Send Notification</h3>
+                        <form id="send-notification-form">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="notificationTarget" class="block text-sm font-medium text-gray-700">Target User</label>
+                                    <input type="text" id="notificationTarget" name="notificationTarget" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="all" readonly>
+                                    <p class="text-xs text-gray-500 mt-1">In this demo, all notifications are sent to 'all'.</p>
+                                </div>
+                                <div>
+                                    <label for="notificationTitle" class="block text-sm font-medium text-gray-700">Title</label>
+                                    <input type="text" id="notificationTitle" name="notificationTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label for="notificationMessage" class="block text-sm font-medium text-gray-700">Message</label>
+                                    <textarea id="notificationMessage" name="notificationMessage" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></textarea>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-4">
+                                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Send Notification</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Column 2: Existing Exams & Submissions -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Published Exams</h3>
+                        <div id="admin-exams-list" class="space-y-3 max-h-60 overflow-y-auto">
+                            <!-- List of exams -->
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Recent Submissions</h3>
+                        <div id="admin-submissions-list" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- List of submissions -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Student Dashboard -->
+        <div id="view-dashboard-student" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Student Dashboard</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Column 1: Available Exams -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4">Available Exams</h3>
+                    <div id="student-exams-list" class="space-y-4">
+                        <!-- List of exams to take -->
+                    </div>
+                </div>
+                <!-- Column 2: Past Results -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4">My Results</h3>
+                    <div id="student-submissions-list" class="space-y-4">
+                        <!-- List of past submissions -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Evaluator Dashboard -->
+        <div id="view-dashboard-evaluator" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Evaluator Dashboard</h2>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-4">All Submissions</h3>
+                <div id="evaluator-submissions-list" class="space-y-4">
+                    <!-- List of submissions to evaluate -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Exam Taking -->
+        <div id="view-exam-taking" class="hidden">
+            <div class="max-w-3xl mx-auto">
+                <!-- Exam Header -->
+                <div class="bg-white p-6 rounded-lg shadow mb-6 sticky top-20 z-10">
+                    <div class="flex justify-between items-center">
+                        <h2 id="exam-title" class="text-2xl font-bold text-gray-900">Exam Title</h2>
+                        <div class="text-right">
+                            <span class="text-lg font-semibold text-red-600">Time Remaining:</span>
+                            <span id="exam-timer" class="text-lg font-bold text-red-600">--:--</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Questions Container -->
+                <div id="exam-questions-container" class="space-y-6">
+                    <!-- Questions will be rendered here -->
+                </div>
+                <!-- Submit Button -->
+                <div class="mt-8 text-center">
+                    <button onclick="handleSubmitExam()" class="w-full md:w-auto px-12 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-green-700">
+                        Submit Exam
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 flex items-center w-full max-w-xs p-4 rounded-lg shadow-lg text-white opacity-0 translate-y-full transition-all duration-300 z-50">
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg">
+            <svg id="toast-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <!-- Icon will be set by JS -->
+            </svg>
+        </div>
+        <div id="toast-message" class="ml-3 text-sm font-medium">
+            Notification message.
+        </div>
+    </div>
+
+
+    <!-- Main Application JavaScript -->
+    <script>
+        // --- Global Variables ---
+        let userRole = null;
+        let examTimer;
+        let currentExamData = null;
+        let currentExamAnswers = {};
+
+        // UI Elements
+        const views = ['view-auth', 'view-dashboard-admin', 'view-dashboard-student', 'view-dashboard-evaluator', 'view-exam-taking'];
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const notificationBell = document.getElementById('notification-bell');
+        const notificationCount = document.getElementById('notification-count');
+        const notificationModal = document.getElementById('notification-modal');
+        const notificationList = document.getElementById('notification-list');
+
+        // --- localStorage Helper Functions ---
+        
+        /**
+         * Gets data from localStorage.
+         * @param {string} key - The key for the data.
+         * @returns {Array|Object} - The parsed data or an empty array/object.
+         */
+        function getData(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error("Error reading from localStorage", e);
+                return [];
+            }
+        }
+
+        /**
+         * Saves data to localStorage.
+         * @param {string} key - The key to save under.
+         * @param {any} data - The data to save.
+         */
+        function saveData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error("Error saving to localStorage", e);
+            }
+        }
+
+        // --- Utility Functions ---
+
+        /**
+         * Switches the visible view.
+         * @param {string} viewToShow - The ID of the view to show.
+         */
+        function showView(viewToShow) {
+            views.forEach(viewId => {
+                const el = document.getElementById(viewId);
+                if (el) {
+                    el.classList.toggle('hidden', viewId !== viewToShow);
+                }
+            });
+            loadingIndicator.classList.add('hidden');
+        }
+
+        /**
+         * Shows a custom toast notification.
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success', 'error', or 'info'.
+         */
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500', 'hidden', 'opacity-0', 'translate-y-full');
+            toastIcon.innerHTML = '';
+
+            if (type === 'success') {
+                toast.classList.add('bg-green-500');
+                toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-500');
+                toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />`;
+            } else {
+                toast.classList.add('bg-blue-500');
+                toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />`;
+            }
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-full');
+            }, 3000);
+        }
+
+        /**
+         * Handles role selection from the auth screen.
+         * @param {string} role - 'admin', 'student', or 'evaluator'.
+         */
+        window.selectRole = function(role) {
+            userRole = role;
+            console.log(`Role selected: ${userRole}`);
+            document.getElementById('current-role-display').textContent = `Role: ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+            
+            switch (role) {
+                case 'admin':
+                    loadAdminDashboard();
+                    break;
+                case 'student':
+                    loadStudentDashboard();
+                    break;
+                case 'evaluator':
+                    loadEvaluatorDashboard();
+                    break;
+            }
+        }
+        
+        window.goBackToRoleSelect = function() {
+            showView('view-auth');
+        }
+
+        // --- Notification System ---
+
+        /**
+         * Toggles the notification modal visibility.
+         */
+        window.toggleNotificationModal = function() {
+            notificationModal.classList.toggle('hidden');
+        }
+
+        /**
+         * Loads notifications for the current user (all 'all' notifications).
+         */
+        function loadNotifications() {
+            const notifications = getData('notifications')
+                .filter(n => n.targetUser === 'all')
+                .sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp, newest first
+
+            let unreadCount = notifications.length; // Simple count for demo
+            
+            notificationList.innerHTML = '';
+            if (notifications.length === 0) {
+                notificationList.innerHTML = '<li class="p-4 text-gray-500">No new notifications.</li>';
+            } else {
+                notifications.forEach(notif => {
+                    const li = document.createElement('li');
+                    li.className = 'border-b border-gray-200 p-4';
+                    li.innerHTML = `
+                        <p class="font-semibold">${notif.title}</p>
+                        <p class="text-gray-700">${notif.message}</p>
+                        <p class="text-xs text-gray-500 mt-1">${new Date(notif.timestamp).toLocaleString()}</p>
+                    `;
+                    notificationList.appendChild(li);
+                });
+            }
+
+            if (unreadCount > 0) {
+                notificationCount.textContent = unreadCount;
+                notificationCount.classList.remove('hidden');
+                notificationBell.classList.add('animate-pulse', 'text-red-500');
+            } else {
+                notificationCount.classList.add('hidden');
+                notificationBell.classList.remove('animate-pulse', 'text-red-500');
+            }
+        }
+
+        /**
+         * Handles sending a notification from the Admin panel.
+         */
+        window.handleSendNotification = function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const title = form.notificationTitle.value;
+            const message = form.notificationMessage.value;
+
+            if (!title || !message) {
+                showToast("Title and message are required.", 'error');
+                return;
+            }
+            
+            const notifications = getData('notifications');
+            notifications.push({
+                id: crypto.randomUUID(),
+                targetUser: 'all',
+                title: title,
+                message: message,
+                timestamp: Date.now()
+            });
+            saveData('notifications', notifications);
+
+            showToast("Notification sent!", 'success');
+            form.reset();
+        }
+
+        // --- Admin Dashboard ---
+
+        function loadAdminDashboard() {
+            showView('view-dashboard-admin');
+            renderAdminExamsList();
+            renderAdminSubmissionsList();
+        }
+
+        function renderAdminExamsList() {
+            const exams = getData('exams');
+            const examsList = document.getElementById('admin-exams-list');
+            examsList.innerHTML = '';
+            if (exams.length === 0) {
+                examsList.innerHTML = '<p class="text-gray-500">No exams created yet.</p>';
+                return;
+            }
+            exams.forEach(exam => {
+                const el = document.createElement('div');
+                el.className = 'p-4 bg-white rounded-lg shadow';
+                el.innerHTML = `<h3 class="font-semibold">${exam.title}</h3><p>${exam.questions.length} Questions, ${exam.duration} mins</p>`;
+                examsList.appendChild(el);
+            });
+        }
+
+        function renderAdminSubmissionsList() {
+            const submissions = getData('submissions');
+            const submissionsList = document.getElementById('admin-submissions-list');
+            submissionsList.innerHTML = '';
+            if (submissions.length === 0) {
+                submissionsList.innerHTML = '<p class="text-gray-500">No submissions yet.</p>';
+                return;
+            }
+            submissions.forEach(sub => {
+                const el = document.createElement('div');
+                el.className = 'p-4 bg-white rounded-lg shadow';
+                el.innerHTML = `
+                    <h3 class="font-semibold">Exam: ${sub.examTitle}</h3>
+                    <p class="font-bold">Score: ${sub.score} / ${sub.totalQuestions}</p>
+                    <p>Status: ${sub.graded ? '<span class="text-green-600">Graded</span>' : '<span class="text-yellow-600">Pending</span>'}</p>
+                `;
+                submissionsList.appendChild(el);
+            });
+        }
+
+        /**
+         * Adds a new question field to the create exam form.
+         */
+        window.addQuestionField = function() {
+            const container = document.getElementById('questions-container');
+            const questionIndex = container.children.length;
+            const el = document.createElement('div');
+            el.className = 'p-4 border rounded-lg mt-4 bg-gray-50';
+            el.innerHTML = `
+                <h4 class="font-semibold">Question ${questionIndex + 1}</h4>
+                <label class="block text-sm font-medium text-gray-700 mt-2">Question Text</label>
+                <input type="text" name="question-${questionIndex}-text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                <label class="block text-sm font-medium text-gray-700 mt-2">Options (comma-separated)</label>
+                <input type="text" name="question-${questionIndex}-options" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g. Option A,Option B,Option C" required>
+                <label class="block text-sm font-medium text-gray-700 mt-2">Correct Answer Index (0-based)</label>
+                <input type="number" name="question-${questionIndex}-correct" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g. 0" min="0" required>
+            `;
+            container.appendChild(el);
+        }
+
+        /**
+         * Handles the creation of a new exam.
+         */
+        window.handleCreateExam = function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const title = form.examTitle.value;
+            const duration = parseInt(form.examDuration.value, 10);
+            
+            const questions = [];
+            const questionNodes = document.getElementById('questions-container').children;
+            
+            for (let i = 0; i < questionNodes.length; i++) {
+                const text = form[`question-${i}-text`].value;
+                const options = form[`question-${i}-options`].value.split(',').map(s => s.trim());
+                const correct = parseInt(form[`question-${i}-correct`].value, 10);
+                
+                if (!text || options.length < 2 || isNaN(correct) || correct < 0 || correct >= options.length) {
+                    showToast(`Invalid data for Question ${i + 1}`, 'error');
+                    return;
+                }
+                questions.push({ text, options, correct });
+            }
+
+            if (questions.length === 0) {
+                showToast("Please add at least one question.", 'error');
+                return;
+            }
+
+            const exams = getData('exams');
+            exams.push({
+                id: crypto.randomUUID(),
+                title,
+                duration,
+                questions
+            });
+            saveData('exams', exams);
+
+            showToast("Exam created successfully!", 'success');
+            form.reset();
+            document.getElementById('questions-container').innerHTML = '';
+            renderAdminExamsList(); // Re-render the list
+        }
+
+        // --- Student Dashboard ---
+
+        function loadStudentDashboard() {
+            showView('view-dashboard-student');
+            loadNotifications(); // Student needs to see notifications
+            renderStudentExamsList();
+            renderStudentSubmissionsList();
+        }
+
+        function renderStudentExamsList() {
+            const exams = getData('exams');
+            const examsList = document.getElementById('student-exams-list');
+            examsList.innerHTML = '';
+            if (exams.length === 0) {
+                examsList.innerHTML = '<p class="text-gray-500">No exams available right now.</p>';
+                return;
+            }
+            exams.forEach(exam => {
+                const el = document.createElement('div');
+                el.className = 'p-4 bg-white rounded-lg shadow flex justify-between items-center';
+                el.innerHTML = `
+                    <div>
+                        <h3 class="font-semibold">${exam.title}</h3>
+                        <p>${exam.questions.length} Questions, ${exam.duration} mins</p>
+                    </div>
+                    <button onclick="startExam('${exam.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Start Exam</button>
+                `;
+                examsList.appendChild(el);
+            });
+        }
+
+        function renderStudentSubmissionsList() {
+            const submissions = getData('submissions');
+            const submissionsList = document.getElementById('student-submissions-list');
+            submissionsList.innerHTML = '';
+            // In a real app, you'd filter by userId. Here we show all.
+            if (submissions.length === 0) {
+                submissionsList.innerHTML = '<p class="text-gray-500">You have not taken any exams yet.</p>';
+                return;
+            }
+            submissions.forEach(sub => {
+                const el = document.createElement('div');
+                el.className = 'p-4 bg-white rounded-lg shadow';
+                el.innerHTML = `
+                    <h3 class="font-semibold">${sub.examTitle}</h3>
+                    <p class="font-bold">Score: ${sub.score} / ${sub.totalQuestions}</p>
+                    <p>Submitted: ${new Date(sub.submittedAt).toLocaleString()}</p>
+                `;
+                submissionsList.appendChild(el);
+            });
+        }
+
+        // --- Exam Taking ---
+
+        window.startExam = function(examId) {
+            const exams = getData('exams');
+            currentExamData = exams.find(e => e.id === examId);
+            
+            if (!currentExamData) {
+                showToast("Error: Exam not found.", 'error');
+                return;
+            }
+            
+            currentExamAnswers = {};
+
+            // Populate exam view
+            document.getElementById('exam-title').textContent = currentExamData.title;
+            const questionsContainer = document.getElementById('exam-questions-container');
+            questionsContainer.innerHTML = '';
+
+            currentExamData.questions.forEach((q, index) => {
+                const el = document.createElement('div');
+                el.className = 'p-6 bg-white rounded-lg shadow mb-6';
+                el.innerHTML = `
+                    <h4 class="font-semibold text-lg mb-4">Question ${index + 1}</h4>
+                    <p class="mb-4">${q.text}</p>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, optIndex) => `
+                            <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="question-${index}" value="${optIndex}" class="mr-3" onchange="recordAnswer(${index}, ${optIndex})">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                questionsContainer.appendChild(el);
+            });
+
+            showView('view-exam-taking');
+
+            // Start timer
+            const timerEl = document.getElementById('exam-timer');
+            let timeRemaining = currentExamData.duration * 60;
+            
+            clearInterval(examTimer);
+            examTimer = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(examTimer);
+                    showToast("Time's up! Submitting your exam.", 'info');
+                    handleSubmitExam();
+                }
+            }, 1000);
+        }
+
+        window.recordAnswer = function(questionIndex, optionIndex) {
+            currentExamAnswers[questionIndex] = optionIndex;
+        }
+
+        window.handleSubmitExam = function() {
+            clearInterval(examTimer);
+            if (!currentExamData) return;
+
+            // Auto-grading
+            let score = 0;
+            const totalQuestions = currentExamData.questions.length;
+
+            for (let i = 0; i < totalQuestions; i++) {
+                const correctIndex = currentExamData.questions[i].correct;
+                const studentAnswer = currentExamAnswers[i]; // This will be the index (e.g., 0, 1, 2)
+                
+                if (studentAnswer !== undefined && studentAnswer === correctIndex) {
+                    score++;
+                }
+            }
+            
+            // Save submission to localStorage
+            const submissions = getData('submissions');
+            submissions.push({
+                id: crypto.randomUUID(),
+                examId: currentExamData.id,
+                examTitle: currentExamData.title,
+                answers: currentExamAnswers,
+                score: score,
+                totalQuestions: totalQuestions,
+                graded: true, // Auto-graded
+                submittedAt: Date.now()
+            });
+            saveData('submissions', submissions);
+
+            showToast(`Exam Submitted! Your score: ${score} / ${totalQuestions}`, 'success');
+            loadStudentDashboard(); // Go back to student dashboard
+        }
+
+        // --- Evaluator Dashboard ---
+        
+        function loadEvaluatorDashboard() {
+            showView('view-dashboard-evaluator');
+            renderEvaluatorSubmissionsList();
+        }
+
+        function renderEvaluatorSubmissionsList() {
+            const submissions = getData('submissions');
+            const submissionsList = document.getElementById('evaluator-submissions-list');
+            submissionsList.innerHTML = '';
+            
+            if (submissions.length === 0) {
+                submissionsList.innerHTML = '<p class="text-gray-500">No submissions to evaluate.</p>';
+                return;
+            }
+
+            submissions.forEach(sub => {
+                const el = document.createElement('div');
+                el.className = 'p-4 bg-white rounded-lg shadow';
+                el.innerHTML = `
+                    <h3 class="font-semibold">Exam: ${sub.examTitle}</h3>
+                    <p class="font-bold">Score: ${sub.score} / ${sub.totalQuestions}</p>
+                    <p>Status: ${sub.graded ? '<span class="text-green-600">Graded</span>' : '<span class="text-yellow-600">Pending</span>'}</p>
+                `;
+                submissionsList.appendChild(el);
+            });
+        }
+
+        // --- App Entry Point ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add form listeners
+            document.getElementById('create-exam-form').addEventListener('submit', handleCreateExam);
+            document.getElementById('send-notification-form').addEventListener('submit', handleSendNotification);
+            
+            // Show the role selector to start
+            showView('view-auth');
+        });
+    </script>
+</body>
+</html>
