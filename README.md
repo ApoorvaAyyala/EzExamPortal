@@ -14,29 +14,31 @@ A single-page application that shows different dashboards for three distinct use
 
 ![Home Page of the Website](Home_Page.png)
 
-🎓 Student: Can view a list of available exams, take any exam under a timer, and see their auto-graded results.
+### 🎓 Student: Can view a list of available exams, take any exam under a timer, and see their auto-graded results.
 
 ![Student Dashboard](Student_dashboard.png)
 
 ![Student View while the exam is going on](Student_View.png)
 
-⚙️ Admin: Can create new exams with multiple-choice questions, view all exams in the system, and see all submissions.
+### ⚙️ Admin: Can create new exams with multiple-choice questions, view all exams in the system, and see all submissions.
 
 ![Admin View](Admin_View.png)
 
 ![Admin can create an exam like this](Admin_creation.png)
 
-🧑‍🏫 Evaluator: Can view a dashboard of all student submissions for review.
+### 🧑‍🏫 Evaluator: Can view a dashboard of all student submissions for review.
 
 ![Evaluator View](Evaluator_View.png)
 
-Persistent Data: Uses the browser's localStorage to save all created exams, submissions, and notifications, so data persists even after you close the browser tab.
+### Other Features include:
 
-Timed Exams: The student's exam session is timed, and the exam auto-submits when the timer runs out.
+1. Persistent Data: Uses the browser's localStorage to save all created exams, submissions, and notifications, so data persists even after you close the browser tab.
 
-Auto-Grading: Multiple-choice questions are automatically graded on submission.
+2. Timed Exams: The student's exam session is timed, and the exam auto-submits when the timer runs out.
 
-Notification System: Admins can send broadcast notifications that are displayed to students.
+3. Auto-Grading: Multiple-choice questions are automatically graded on submission.
+
+4. Notification System: Admins can send broadcast notifications that are displayed to students.
 
 ### Tech Stack
 
